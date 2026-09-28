@@ -263,7 +263,7 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
 
     const heartbeat = heartbeatService(db);
 
-    // createdAt is set during seedFixture, so use a time sufficiently
+    // createdAt is 12:29:00, so the 300-second default is due at 12:34:00.
 
     const beforeDefaultInterval = new Date(
       "2026-04-11T12:33:59.999Z",

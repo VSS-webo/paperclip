@@ -291,6 +291,34 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
     ).toBe(true);
   });
 
+
+  it("uses the default heartbeat interval when intervalSec is blank", async () => {
+    const { agentId } = await seedFixture({
+      heartbeat: {
+        enabled: true,
+        intervalSec: "   ",
+      },
+      nextCheckAt: new Date("2026-04-11T13:00:00.000Z"),
+    });
+
+    const heartbeat = heartbeatService(db);
+
+    const tickAt = new Date("2026-04-11T12:34:00.000Z");
+
+    const result = await heartbeat.tickTimers(tickAt);
+
+    expect(result.enqueued).toBe(1);
+
+    const wakeups = await db
+      .select()
+      .from(agentWakeupRequests)
+      .where(eq(agentWakeupRequests.agentId, agentId));
+
+    expect(
+      wakeups.some((wake) => wake.reason === "heartbeat_timer"),
+    ).toBe(true);
+  });
+
   it("keeps heartbeat disabled when intervalSec is explicitly zero", async () => {
     const { agentId } = await seedFixture({
       heartbeat: {

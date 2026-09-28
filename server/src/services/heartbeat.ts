@@ -685,6 +685,8 @@ const PENDING_CLEANUP_RETRY_ERROR_KIND = "destroy_failed";
 const PENDING_CLEANUP_SWEEP_ERROR_KIND = "sweep_failed";
 const ORPHANED_ACTIVE_LEASE_SWEEP_ERROR_KIND = "orphaned_active_lease_sweep_failed";
 
+const HEARTBEAT_INTERVAL_SEC_DEFAULT =300;
+
 // Read the stored retry attempt count as a safe value, directly in SQL. A
 // provider can write a malformed value under the attempts key. The type guard
 // makes any non-number value read as zero. The reader computes as numeric and
@@ -16581,7 +16583,7 @@ export function heartbeatService(
 
     return {
       enabled: asBoolean(heartbeat.enabled, false),
-      intervalSec: Math.max(0, asNumber(heartbeat.intervalSec, 0)),
+      intervalSec: Math.max(0,asNumber(heartbeat.intervalSec,heartbeat.enabled ? HEARTBEAT_INTERVAL_SEC_DEFAULT : 0),),
       wakeOnDemand: isHeartbeatWakeOnDemandEnabled(agent),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(
         heartbeat.maxConcurrentRuns,

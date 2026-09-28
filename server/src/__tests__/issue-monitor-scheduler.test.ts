@@ -152,6 +152,7 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
     issueStatus?: "in_progress" | "in_review";
     monitorAttemptCount?: number;
     monitor?: Record<string, unknown>;
+    heartbeat?: Record<string, unknown>;
   }) {
     const companyId = randomUUID();
     const agentId = randomUUID();
@@ -191,9 +192,11 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
         heartbeat: {
           enabled: false,
           wakeOnDemand: true,
+          ...(input?.heartbeat ?? {}),
         },
       },
       permissions: {},
+      createdAt,
     });
     seededAgentIds.add(agentId);
 
@@ -246,6 +249,35 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
 
     return { companyId, agentId, issueId, nextCheckAt };
   }
+
+
+  it("uses the default heartbeat interval when heartbeat is enabled without intervalSec", async () => {
+  const { agentId } = await seedFixture({
+    heartbeat: {
+      enabled: true,
+    },
+  });
+
+    const heartbeat = heartbeatService(db);
+
+    // createdAt is set during seedFixture, so use a time sufficiently
+    // after creation for the default 300-second interval to be due.
+    const tickAt = new Date("2026-04-11T12:35:00.000Z");
+
+    const result = await heartbeat.tickTimers(tickAt);
+
+    expect(result.enqueued).toBe(1);
+
+    const wakeups = await db
+      .select()
+      .from(agentWakeupRequests)
+      .where(eq(agentWakeupRequests.agentId, agentId));
+
+    expect(
+      wakeups.some((wake) => wake.reason === "heartbeat_timer"),
+    ).toBe(true);
+  });
+
 
   it("triggers due issue monitors once and clears the one-shot schedule", async () => {
     const { issueId, agentId } = await seedFixture();

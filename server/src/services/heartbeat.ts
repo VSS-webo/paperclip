@@ -16580,9 +16580,12 @@ export function heartbeatService(
   function parseHeartbeatPolicy(agent: typeof agents.$inferSelect) {
     const runtimeConfig = parseObject(agent.runtimeConfig);
     const heartbeat = parseObject(runtimeConfig.heartbeat);
-
+    const enabled =
+      typeof heartbeat.enabled === "string"
+        ? heartbeat.enabled.trim().toLowerCase() === "true"
+        : asBoolean(heartbeat.enabled, false);
     return {
-      enabled: asBoolean(heartbeat.enabled, false),
+      enabled,
       intervalSec: Math.max(0,asNumber(heartbeat.intervalSec,heartbeat.enabled ? HEARTBEAT_INTERVAL_SEC_DEFAULT : 0),),
       wakeOnDemand: isHeartbeatWakeOnDemandEnabled(agent),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(

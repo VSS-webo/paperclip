@@ -264,10 +264,20 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
     const heartbeat = heartbeatService(db);
 
     // createdAt is set during seedFixture, so use a time sufficiently
-    // after creation for the default 300-second interval to be due.
-    const tickAt = new Date("2026-04-11T12:35:00.000Z");
 
-    const result = await heartbeat.tickTimers(tickAt);
+    const beforeDefaultInterval = new Date(
+      "2026-04-11T12:33:59.999Z",
+    );
+
+    const atDefaultInterval = new Date(
+      "2026-04-11T12:34:00.000Z",
+    );
+
+    const beforeResult = await heartbeat.tickTimers(beforeDefaultInterval);
+
+    expect(beforeResult.enqueued).toBe(0);
+
+    const result = await heartbeat.tickTimers(atDefaultInterval);
 
     expect(result.enqueued).toBe(1);
 

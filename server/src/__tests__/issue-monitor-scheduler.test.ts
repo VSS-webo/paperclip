@@ -295,7 +295,7 @@ describeEmbeddedPostgres("issue monitor scheduler", () => {
     const { agentId } = await seedFixture({
       heartbeat: {
         enabled: true,
-        intervalSec: 0,
+        intervalSec: "0",
       },
       nextCheckAt: new Date("2026-04-11T13:00:00.000Z"),
   });

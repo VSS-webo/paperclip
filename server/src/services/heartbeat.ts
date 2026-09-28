@@ -4455,6 +4455,14 @@ function sanitizeAgentSessionMessageText(value: unknown): string | null {
   return redacted.trim().length > 0 ? redacted : null;
 }
 
+function parseNumberLike(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+
+  const parsed = Number(value.trim());
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 type ManagedMcpGatewayRunConfig = {
   version: 1;
   managedMcpOnly: boolean;
@@ -16586,7 +16594,11 @@ export function heartbeatService(
         : asBoolean(heartbeat.enabled, false);
     return {
       enabled,
-      intervalSec: Math.max(0,asNumber(heartbeat.intervalSec,heartbeat.enabled ? HEARTBEAT_INTERVAL_SEC_DEFAULT : 0),),
+      intervalSec: Math.max(
+        0,
+        parseNumberLike(heartbeat.intervalSec) ??
+          (enabled ? HEARTBEAT_INTERVAL_SEC_DEFAULT : 0),
+      ),
       wakeOnDemand: isHeartbeatWakeOnDemandEnabled(agent),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(
         heartbeat.maxConcurrentRuns,
